@@ -104,7 +104,8 @@ TurnInstruction IntersectionHandler::getInstructionForObvious(const std::size_t 
                 // We reserve merges for motorway types. All others are considered for simply going
                 // straight onto a road. This avoids confusion about merge directions on streets
                 // that could potentially also offer different choices
-                if (out_data.road_classification.IsMotorwayClass())
+                if (out_data.road_classification.IsMotorwayClass() &&
+                    !out_data.road_classification.IsLinkClass())
                     return {TurnType::Merge,
                             road.angle > STRAIGHT_ANGLE ? DirectionModifier::SlightRight
                                                         : DirectionModifier::SlightLeft};
@@ -452,6 +453,14 @@ bool IntersectionHandler::isSameName(const EdgeID source_edge_id, const EdgeID t
                                                   target_edge_data.name_id,
                                                   name_table,
                                                   street_name_suffix_table); //
+}
+
+bool IntersectionHandler::CanBeObvious(const EdgeData &from, const EdgeData &to) const
+{
+    // no change in roundabout flags, travel modes (e.g. car onto ferry, bike to get off the bike
+    // and walk). Obvious turns are not necessarily announced, and we guarantee to announce mode
+    // changes
+    return from.travel_mode == to.travel_mode && from.roundabout == to.roundabout;
 }
 
 } // namespace guidance

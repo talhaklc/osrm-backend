@@ -359,7 +359,7 @@ Feature: Collapse
             | a,g       | first,second,second | depart,turn left,arrive        | a,b,g     |
             | d,g       | first,second,second | depart,turn right,arrive       | d,e,g     |
             | g,f       | second,first,first  | depart,turn right,arrive       | g,e,f     |
-            | g,c       | second,first,first  | depart,turn left,arrive        | g,e,c     |
+            | g,c       | second,first,first  | depart,end of road left,arrive | g,b,c     |
 
     Scenario: Do not collapse turning roads
         Given the node map

@@ -11,6 +11,9 @@
 #include <boost/assert.hpp>
 #include <boost/optional.hpp>
 
+#include "util/geojson_debug_logger.hpp"
+#include "util/geojson_debug_policies.hpp"
+
 using osrm::extractor::guidance::getTurnDirection;
 using osrm::util::angularDeviation;
 
@@ -47,8 +50,7 @@ bool isEndOfRoad(const ConnectedRoad &,
 {
     return angularDeviation(possible_right_turn.angle, 90) < NARROW_TURN_ANGLE &&
            angularDeviation(possible_left_turn.angle, 270) < NARROW_TURN_ANGLE &&
-           angularDeviation(possible_right_turn.angle, possible_left_turn.angle) >
-               2 * NARROW_TURN_ANGLE;
+           angularDeviation(possible_right_turn.angle, possible_left_turn.angle) >= STRAIGHT_ANGLE - NARROW_TURN_ANGLE;
 }
 
 template <typename InputIt>
@@ -229,6 +231,37 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
 {
     BOOST_ASSERT(intersection.size() == 3);
     const auto obvious_index = findObviousTurn(via_edge, intersection);
+    const auto obvious_index_old = findObviousTurnOld(via_edge, intersection);
+
+    if (obvious_index != obvious_index_old)
+    {
+
+        if (obvious_index_old == 0)
+        {
+            std::vector<NodeID> old_center = {node_based_graph.GetTarget(via_edge)};
+            util::ScopedGeojsonLoggerGuard<util::NodeIdVectorToMultiPoint, osrm::util::LoggingScenario(0)>::Write(old_center);
+        }
+        else
+        {
+            std::vector<NodeID> old_line = {
+                node_based_graph.GetTarget(via_edge),
+                node_based_graph.GetTarget(intersection[obvious_index_old].eid)};
+            util::ScopedGeojsonLoggerGuard<util::NodeIdVectorToLineString, osrm::util::LoggingScenario(0)>::Write(old_line);
+        }
+        if (obvious_index == 0)
+        {
+            std::vector<NodeID> new_center = {node_based_graph.GetTarget(via_edge)};
+            util::ScopedGeojsonLoggerGuard<util::NodeIdVectorToMultiPoint, osrm::util::LoggingScenario(1)>::Write(new_center);
+        }
+        else
+        {
+            std::vector<NodeID> new_line = {
+                node_based_graph.GetTarget(via_edge),
+                node_based_graph.GetTarget(intersection[obvious_index].eid)};
+            util::ScopedGeojsonLoggerGuard<util::NodeIdVectorToLineString, osrm::util::LoggingScenario(1)>::Write(new_line);
+        }
+    }
+
     BOOST_ASSERT(intersection[0].angle < 0.001);
     /* Two nearly straight turns -> FORK
                OOOOOOO
@@ -310,7 +343,42 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
 
 Intersection TurnHandler::handleComplexTurn(const EdgeID via_edge, Intersection intersection) const
 {
+    std::cout << "[intersection]\n";
+    for( auto road : intersection )
+        std::cout << "\t" << toString(road) << std::endl;
+
     const std::size_t obvious_index = findObviousTurn(via_edge, intersection);
+    const auto obvious_index_old = findObviousTurnOld(via_edge, intersection);
+
+    if (obvious_index != obvious_index_old)
+    {
+
+        if (obvious_index_old == 0)
+        {
+            std::vector<NodeID> old_center = {node_based_graph.GetTarget(via_edge)};
+            util::ScopedGeojsonLoggerGuard<util::NodeIdVectorToMultiPoint, osrm::util::LoggingScenario(0)>::Write(old_center);
+        }
+        else
+        {
+            std::vector<NodeID> old_line = {
+                node_based_graph.GetTarget(via_edge),
+                node_based_graph.GetTarget(intersection[obvious_index_old].eid)};
+            util::ScopedGeojsonLoggerGuard<util::NodeIdVectorToLineString, osrm::util::LoggingScenario(0)>::Write(old_line);
+        }
+        if (obvious_index == 0)
+        {
+            std::vector<NodeID> new_center = {node_based_graph.GetTarget(via_edge)};
+            util::ScopedGeojsonLoggerGuard<util::NodeIdVectorToMultiPoint, osrm::util::LoggingScenario(1)>::Write(new_center);
+        }
+        else
+        {
+            std::vector<NodeID> new_line = {
+                node_based_graph.GetTarget(via_edge),
+                node_based_graph.GetTarget(intersection[obvious_index].eid)};
+            util::ScopedGeojsonLoggerGuard<util::NodeIdVectorToLineString, osrm::util::LoggingScenario(1)>::Write(new_line);
+        }
+    }
+
     const auto fork = findFork(via_edge, intersection);
 
     const auto straightmost = intersection.findClosestTurn(STRAIGHT_ANGLE);
