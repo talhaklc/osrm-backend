@@ -1,4 +1,8 @@
 # UNRELEASED
+    - Bugfixes
+      - Fixed a bug that would result in unnecessary instructions, due to problems in suffix/prefix detection
+    - Guidance
+      - improved detection of obvious roads, leading to less miss-classifications. This affects both announcement/suppression of turns
 
 # 5.12.0
     - Guidance
