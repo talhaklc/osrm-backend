@@ -2,6 +2,8 @@
   - Changes from 5.11:
     - Guidance
       - now announcing turning onto oneways at the end of a road (e.g. onto dual carriageways)
+    - Bugfixes
+      - Fixed a bug that would result in unnecessary instructions, due to problems in suffix/prefix detection
 
 # 5.11.0
   - Changes from 5.10:
