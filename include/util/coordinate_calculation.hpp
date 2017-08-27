@@ -378,6 +378,10 @@ bool areParallel(const iterator_type lhs_begin,
     return std::abs(slope_rhs) < 0.20; // twenty percent incline at the most
 }
 
+boost::optional<Coordinate> circleCenter(const std::vector<Coordinate> &coords);
+
+double circleRadius(const std::vector<Coordinate> &coords);
+
 } // ns coordinate_calculation
 } // ns util
 } // ns osrm

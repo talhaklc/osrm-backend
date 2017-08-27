@@ -408,4 +408,132 @@ BOOST_AUTO_TEST_CASE(regression_test_3516)
     BOOST_CHECK_EQUAL(nearest_location, v);
 }
 
+BOOST_AUTO_TEST_CASE(circleCenterFit)
+{
+    const auto dist_eps = .5;
+    auto dist = [](const Coordinate &x, const std::vector<Coordinate> &p) {
+        return coordinate_calculation::haversineDistance(
+            x, *coordinate_calculation::circleCenter(p[0], p[1], p[2]));
+    };
+
+    std::vector<Coordinate> p{{FloatLongitude{-100.}, FloatLatitude{10.}},
+                              {FloatLongitude{-100.002}, FloatLatitude{10.001}},
+                              {FloatLongitude{-100.001}, FloatLatitude{10.002}}};
+    auto result = coordinate_calculation::circleCenter(p);
+    BOOST_CHECK(result);
+    BOOST_CHECK_SMALL(dist(*result, p), dist_eps);
+
+    // Co-linear longitude
+    p = std::vector<Coordinate>{{FloatLongitude{-100.}, FloatLatitude{10.}},
+                                {FloatLongitude{-100.001}, FloatLatitude{10.001}},
+                                {FloatLongitude{-100.001}, FloatLatitude{10.002}}};
+    result = coordinate_calculation::circleCenter(p);
+    BOOST_CHECK(result);
+    BOOST_CHECK_SMALL(dist(*result, p), dist_eps);
+
+    // Co-linear longitude, impossible to calculate
+    p = std::vector<Coordinate>{{FloatLongitude{-100.001}, FloatLatitude{10.}},
+                                {FloatLongitude{-100.001}, FloatLatitude{10.001}},
+                                {FloatLongitude{-100.001}, FloatLatitude{10.002}}};
+    result = coordinate_calculation::circleCenter(p);
+    BOOST_CHECK(!result);
+
+    // Co-linear latitude, this is a real case that failed
+    p = std::vector<Coordinate>{{FloatLongitude{-112.096234}, FloatLatitude{41.147101}},
+                                {FloatLongitude{-112.096606}, FloatLatitude{41.147101}},
+                                {FloatLongitude{-112.096419}, FloatLatitude{41.147259}}};
+    result = coordinate_calculation::circleCenter(p);
+    BOOST_CHECK(result);
+    BOOST_CHECK_SMALL(dist(*result, p), dist_eps);
+
+    // Co-linear latitude, variation
+    p = std::vector<Coordinate>{{FloatLongitude{-112.096234}, FloatLatitude{41.147101}},
+                                {FloatLongitude{-112.096606}, FloatLatitude{41.147259}},
+                                {FloatLongitude{-112.096419}, FloatLatitude{41.147259}}};
+    result = coordinate_calculation::circleCenter(p);
+    BOOST_CHECK(result);
+    BOOST_CHECK_SMALL(dist(*result, p), dist_eps);
+
+    // Co-linear latitude, impossible to calculate
+    p = std::vector<Coordinate>{{FloatLongitude{-112.096234}, FloatLatitude{41.147259}},
+                                {FloatLongitude{-112.096606}, FloatLatitude{41.147259}},
+                                {FloatLongitude{-112.096419}, FloatLatitude{41.147259}}};
+    result = coordinate_calculation::circleCenter(p);
+    BOOST_CHECK(!result);
+
+    // Out of bounds
+    p = std::vector<Coordinate>{{FloatLongitude{-112.096234}, FloatLatitude{41.147258}},
+                                {FloatLongitude{-112.106606}, FloatLatitude{41.147259}},
+                                {FloatLongitude{-113.096419}, FloatLatitude{41.147258}}};
+    result = coordinate_calculation::circleCenter(p);
+    BOOST_CHECK(!result);
+}
+
+BOOST_AUTO_TEST_CASE(circleRadiusFit)
+{
+    const auto meters_in_degree = coordinate_calculation::detail::DEGREE_TO_RAD *
+                                  coordinate_calculation::detail::EARTH_RADIUS;
+
+    std::vector<Coordinate> p;
+    BOOST_CHECK(!std::isfinite(coordinate_calculation::circleRadius(p)));
+
+    p = std::vector<Coordinate>{{FloatLongitude{-100.}, FloatLatitude{10.}}};
+    BOOST_CHECK_SMALL(coordinate_calculation::circleRadius(p), 1e-8);
+
+    p = std::vector<Coordinate>{{FloatLongitude{-100.}, FloatLatitude{10.}},
+                                {FloatLongitude{-100.002}, FloatLatitude{10.001}}};
+    BOOST_CHECK_CLOSE(0.5 * coordinate_calculation::haversineDistance(p[0], p[1]),
+                      coordinate_calculation::circleRadius(p),
+                      1e-6);
+
+    p = std::vector<Coordinate>{{FloatLongitude{-100.}, FloatLatitude{10.}},
+                                {FloatLongitude{-100.002}, FloatLatitude{10.001}},
+                                {FloatLongitude{-100.001}, FloatLatitude{10.002}}};
+    BOOST_CHECK_CLOSE(coordinate_calculation::circleRadius(p[0], p[1], p[2]),
+                      coordinate_calculation::circleRadius(p),
+                      1.);
+
+    p = std::vector<Coordinate>{{FloatLongitude{-1.}, FloatLatitude{-1.}},
+                                {FloatLongitude{0.}, FloatLatitude{0.}},
+                                {FloatLongitude{1.}, FloatLatitude{1.}}};
+    BOOST_CHECK(!std::isfinite(coordinate_calculation::circleRadius(p)));
+
+    p = std::vector<Coordinate>{{FloatLongitude{-1.}, FloatLatitude{-1.}},
+                                {FloatLongitude{0.}, FloatLatitude{0.}},
+                                {FloatLongitude{1.}, FloatLatitude{1.001}}};
+    BOOST_CHECK(!std::isfinite(coordinate_calculation::circleRadius(p)));
+
+    p = std::vector<Coordinate>{{FloatLongitude{0.}, FloatLatitude{0.}},
+                                {FloatLongitude{3.}, FloatLatitude{0.}},
+                                {FloatLongitude{0.}, FloatLatitude{4.}}};
+    BOOST_CHECK_CLOSE(2.5 * meters_in_degree, coordinate_calculation::circleRadius(p), 1e-2);
+
+    p = std::vector<Coordinate>{{FloatLongitude{1.}, FloatLatitude{0.}},
+                                {FloatLongitude{0.}, FloatLatitude{1.}},
+                                {FloatLongitude{-1.}, FloatLatitude{0.}},
+                                {FloatLongitude{0.}, FloatLatitude{-1.}}};
+    BOOST_CHECK_CLOSE(meters_in_degree, coordinate_calculation::circleRadius(p), 1e-3);
+
+    p = std::vector<Coordinate>{{FloatLongitude{std::cos(0.)}, FloatLatitude{std::sin(0)}},
+                                {FloatLongitude{std::cos(1.)}, FloatLatitude{std::sin(1)}},
+                                {FloatLongitude{std::cos(2.)}, FloatLatitude{std::sin(2)}},
+                                {FloatLongitude{std::cos(3.)}, FloatLatitude{std::sin(3)}},
+                                {FloatLongitude{std::cos(4.)}, FloatLatitude{std::sin(4)}},
+                                {FloatLongitude{std::cos(5.)}, FloatLatitude{std::sin(5)}},
+                                {FloatLongitude{std::cos(6.)}, FloatLatitude{std::sin(6)}}};
+    BOOST_CHECK_CLOSE(coordinate_calculation::circleRadius(p[0], p[1], p[2]),
+                      coordinate_calculation::circleRadius(p),
+                      0.1);
+
+    p = std::vector<Coordinate>{{FloatLongitude{5}, FloatLatitude{0}},
+                                {FloatLongitude{3}, FloatLatitude{1}},
+                                {FloatLongitude{6}, FloatLatitude{2}},
+                                {FloatLongitude{5}, FloatLatitude{3}},
+                                {FloatLongitude{7}, FloatLatitude{4}},
+                                {FloatLongitude{9}, FloatLatitude{5}},
+                                {FloatLongitude{12}, FloatLatitude{6}},
+                                {FloatLongitude{16}, FloatLatitude{7}}};
+    BOOST_CHECK_CLOSE(coordinate_calculation::circleRadius(p), 1839194, 1);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

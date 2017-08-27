@@ -261,6 +261,8 @@ bool MergableRoadDetector::HaveSameDirection(const NodeID intersection_node,
                                              const MergableRoadData &lhs,
                                              const MergableRoadData &rhs) const
 {
+    using namespace util::coordinate_calculation;
+
     if (angularDeviation(lhs.bearing, rhs.bearing) > MERGABLE_ANGLE_DIFFERENCE)
         return false;
 
@@ -296,6 +298,11 @@ bool MergableRoadDetector::HaveSameDirection(const NodeID intersection_node,
         getCoordinatesAlongWay(rhs.eid, distance_to_extract);
 
     if (distance_traversed_to_the_right <= MINIMUM_LENGTH_FOR_PARALLEL_DETECTION)
+        return false;
+
+    // don't merge curved roads (turning radius is less 2 radian arc)
+    if (circleRadius(coordinates_to_the_left) < distance_traversed_to_the_left / 2. ||
+        circleRadius(coordinates_to_the_right) < distance_traversed_to_the_right / 2.)
         return false;
 
     const auto connect_again = (coordinates_to_the_left.back() == coordinates_to_the_right.back());
