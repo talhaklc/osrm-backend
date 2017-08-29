@@ -34,11 +34,13 @@ std::size_t getNumberOfTurns(const Intersection &intersection)
 } // namespace
 
 TurnLaneHandler::TurnLaneHandler(const util::NodeBasedDynamicGraph &node_based_graph,
+                                 const std::vector<util::Coordinate> &coordinates,
+                                 const extractor::PackedOSMIDs &osm_node_ids,
                                  LaneDescriptionMap &lane_description_map,
                                  const TurnAnalysis &turn_analysis,
                                  util::guidance::LaneDataIdMap &id_map)
-    : node_based_graph(node_based_graph), lane_description_map(lane_description_map),
-      turn_analysis(turn_analysis), id_map(id_map)
+    : node_based_graph(node_based_graph), coordinates(coordinates), osm_node_ids(osm_node_ids),
+      lane_description_map(lane_description_map), turn_analysis(turn_analysis), id_map(id_map)
 {
     std::tie(turn_lane_offsets, turn_lane_masks) =
         transformTurnLaneMapIntoArrays(lane_description_map);
@@ -669,8 +671,32 @@ Intersection TurnLaneHandler::simpleMatchTuplesToTurns(Intersection intersection
                                                        const LaneDataVector &lane_data,
                                                        const LaneDescriptionID lane_description_id)
 {
-    if (lane_data.empty() || !canMatchTrivially(intersection, lane_data))
+    if (lane_data.empty())
         return intersection;
+
+    if (!canMatchTrivially(intersection, lane_data))
+    {
+
+        if (false)
+        { // all of this should be optional via a validation cmd line flag
+
+            const auto from_eid = intersection.getUTurnRoad().eid;
+            const auto from_nid = node_based_graph.GetTarget(from_eid);
+
+            std::stringstream fmt;
+            fmt << std::setprecision(12);
+
+            fmt << osm_node_ids[from_nid];
+            fmt << "," << util::toFloating(coordinates[from_nid].lon) << ","
+                << util::toFloating(coordinates[from_nid].lat);
+
+            // Note: single operator<< cout call to not garble output running
+            // multi-threaded; no endl to not flush the stream after every turn
+            std::cout << fmt.str() << '\n';
+        }
+
+        return intersection;
+    }
 
     BOOST_ASSERT(
         !hasTag(TurnLaneType::none | TurnLaneType::merge_to_left | TurnLaneType::merge_to_right,
