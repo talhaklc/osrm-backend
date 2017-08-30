@@ -277,6 +277,12 @@ class ValidationHandler final : public IntersectionHandler
             return;
         }
 
+        if (via_road_data.roundabout || leftmost_road_data.roundabout ||
+            rightmost_road_data.roundabout)
+        {
+            return;
+        }
+
         const auto via_road_low_prio_class =
             via_road_data.road_classification.IsLowPriorityRoadClass();
         const auto leftmost_road_low_prio_class =
@@ -359,6 +365,40 @@ class ValidationHandler final : public IntersectionHandler
                                 handler,
                                 std::to_string(rightmost_road.angle)};
             turn_diagnostics.push_back(std::move(diag));
+        }
+    }
+
+    void checkForSharpTurnsInRoundabouts(const NodeID from_nid,
+                                         const EdgeID via_eid,
+                                         const Intersection &intersection) const
+    {
+        const bool via_is_roundabout = node_based_graph.GetEdgeData(via_eid).roundabout;
+
+        // Index 0 is UTurn road
+        for (std::size_t i = 1; i < intersection.size(); ++i)
+        {
+            const auto &road = intersection[i];
+
+            if (!road.entry_allowed)
+            {
+                continue;
+            }
+
+            const bool is_roundabout = node_based_graph.GetEdgeData(road.eid).roundabout;
+
+            if (osrm::util::angularDeviation(0, road.angle) <= 2 * NARROW_TURN_ANGLE &&
+                (is_roundabout || via_is_roundabout))
+            {
+                const NodeID via_nid = node_based_graph.GetTarget(via_eid);
+                const NodeID to_nid = node_based_graph.GetTarget(road.eid);
+
+                static const auto handler = "SharpTurnsInRoundabouts";
+
+                std::lock_guard<std::mutex> defer{turn_diagnostics_lock};
+
+                TurnDiagnostic diag{from_nid, via_nid, to_nid, handler, std::to_string(road.angle)};
+                turn_diagnostics.push_back(std::move(diag));
+            }
         }
     }
 };
