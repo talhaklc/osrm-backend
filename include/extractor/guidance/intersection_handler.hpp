@@ -510,8 +510,8 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
     auto const to_index_if_valid = [&](auto const iterator) -> std::size_t {
         std::cout << "Considering: " << std::distance(intersection.begin(), iterator)
                   << " for obvious." << std::endl;
-        if (CanBeObvious(node_based_graph.GetEdgeData(via_edge),
-                         node_based_graph.GetEdgeData(iterator->eid)))
+        if (this->CanBeObvious(node_based_graph.GetEdgeData(via_edge),
+                               node_based_graph.GetEdgeData(iterator->eid)))
             return std::distance(intersection.begin(), iterator);
         else
             return 0;
