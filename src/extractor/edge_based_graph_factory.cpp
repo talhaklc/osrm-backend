@@ -225,10 +225,8 @@ void EdgeBasedGraphFactory::Run(ScriptingEnvironment &scripting_environment,
                                 const ConditionalRestrictionMap &conditional_node_restriction_map,
                                 const WayRestrictionMap &way_restriction_map)
 {
-    util::ScopedGeojsonLoggerGuard<util::NodeIdVectorToLineString,osrm::util::LoggingScenario(0)> old_guard("old_obvious.geojson",m_coordinates);
-    util::ScopedGeojsonLoggerGuard<util::NodeIdVectorToMultiPoint,osrm::util::LoggingScenario(0)> old_point_guard("old_not_obvious.geojson",m_coordinates);
-    util::ScopedGeojsonLoggerGuard<util::NodeIdVectorToLineString,osrm::util::LoggingScenario(1)> guard("new_obvious.geojson",m_coordinates);
-    util::ScopedGeojsonLoggerGuard<util::NodeIdVectorToMultiPoint,osrm::util::LoggingScenario(1)> point_guard("new_not_obvious.geojson",m_coordinates);
+    util::ScopedGeojsonLoggerGuard<util::CoordinateVectorToLineString,osrm::util::LoggingScenario(0)> old_guard("old_obvious.geojson");
+    util::ScopedGeojsonLoggerGuard<util::CoordinateVectorToLineString,osrm::util::LoggingScenario(1)> guard("new_obvious.geojson");
 
     TIMER_START(renumber);
     m_number_of_edge_based_nodes = RenumberEdges() + way_restriction_map.NumberOfDuplicatedNodes();

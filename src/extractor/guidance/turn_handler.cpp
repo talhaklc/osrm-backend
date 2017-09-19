@@ -50,7 +50,8 @@ bool isEndOfRoad(const ConnectedRoad &,
 {
     return angularDeviation(possible_right_turn.angle, 90) < NARROW_TURN_ANGLE &&
            angularDeviation(possible_left_turn.angle, 270) < NARROW_TURN_ANGLE &&
-           angularDeviation(possible_right_turn.angle, possible_left_turn.angle) >= STRAIGHT_ANGLE - NARROW_TURN_ANGLE;
+           angularDeviation(possible_right_turn.angle, possible_left_turn.angle) >=
+               STRAIGHT_ANGLE - NARROW_TURN_ANGLE;
 }
 
 template <typename InputIt>
@@ -235,30 +236,22 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
 
     if (obvious_index != obvious_index_old)
     {
-
-        if (obvious_index_old == 0)
+        const auto &extractor = intersection_generator.GetCoordinateExtractor();
+        if (obvious_index_old != 0 && intersection[obvious_index_old].entry_allowed)
         {
-            std::vector<NodeID> old_center = {node_based_graph.GetTarget(via_edge)};
-            util::ScopedGeojsonLoggerGuard<util::NodeIdVectorToMultiPoint, osrm::util::LoggingScenario(0)>::Write(old_center);
+            auto line = extractor.GetForwardCoordinatesAlongRoad(
+                node_based_graph.GetTarget(via_edge), intersection[obvious_index_old].eid);
+            line = extractor.TrimCoordinatesToLength(std::move(line), 30);
+            util::ScopedGeojsonLoggerGuard<util::CoordinateVectorToLineString,
+                                           osrm::util::LoggingScenario(0)>::Write(line);
         }
-        else
+        if (obvious_index != 0)
         {
-            std::vector<NodeID> old_line = {
-                node_based_graph.GetTarget(via_edge),
-                node_based_graph.GetTarget(intersection[obvious_index_old].eid)};
-            util::ScopedGeojsonLoggerGuard<util::NodeIdVectorToLineString, osrm::util::LoggingScenario(0)>::Write(old_line);
-        }
-        if (obvious_index == 0)
-        {
-            std::vector<NodeID> new_center = {node_based_graph.GetTarget(via_edge)};
-            util::ScopedGeojsonLoggerGuard<util::NodeIdVectorToMultiPoint, osrm::util::LoggingScenario(1)>::Write(new_center);
-        }
-        else
-        {
-            std::vector<NodeID> new_line = {
-                node_based_graph.GetTarget(via_edge),
-                node_based_graph.GetTarget(intersection[obvious_index].eid)};
-            util::ScopedGeojsonLoggerGuard<util::NodeIdVectorToLineString, osrm::util::LoggingScenario(1)>::Write(new_line);
+            auto line = extractor.GetForwardCoordinatesAlongRoad(
+                node_based_graph.GetTarget(via_edge), intersection[obvious_index].eid);
+            line = extractor.TrimCoordinatesToLength(std::move(line), 30);
+            util::ScopedGeojsonLoggerGuard<util::CoordinateVectorToLineString,
+                                           osrm::util::LoggingScenario(1)>::Write(line);
         }
     }
 
@@ -344,7 +337,7 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
 Intersection TurnHandler::handleComplexTurn(const EdgeID via_edge, Intersection intersection) const
 {
     std::cout << "[intersection]\n";
-    for( auto road : intersection )
+    for (auto road : intersection)
         std::cout << "\t" << toString(road) << std::endl;
 
     const std::size_t obvious_index = findObviousTurn(via_edge, intersection);
@@ -352,30 +345,22 @@ Intersection TurnHandler::handleComplexTurn(const EdgeID via_edge, Intersection 
 
     if (obvious_index != obvious_index_old)
     {
-
-        if (obvious_index_old == 0)
+        const auto &extractor = intersection_generator.GetCoordinateExtractor();
+        if (obvious_index_old != 0 && intersection[obvious_index_old].entry_allowed)
         {
-            std::vector<NodeID> old_center = {node_based_graph.GetTarget(via_edge)};
-            util::ScopedGeojsonLoggerGuard<util::NodeIdVectorToMultiPoint, osrm::util::LoggingScenario(0)>::Write(old_center);
+            auto line = extractor.GetForwardCoordinatesAlongRoad(
+                node_based_graph.GetTarget(via_edge), intersection[obvious_index_old].eid);
+            line = extractor.TrimCoordinatesToLength(std::move(line), 30);
+            util::ScopedGeojsonLoggerGuard<util::CoordinateVectorToLineString,
+                                           osrm::util::LoggingScenario(0)>::Write(line);
         }
-        else
+        if (obvious_index != 0)
         {
-            std::vector<NodeID> old_line = {
-                node_based_graph.GetTarget(via_edge),
-                node_based_graph.GetTarget(intersection[obvious_index_old].eid)};
-            util::ScopedGeojsonLoggerGuard<util::NodeIdVectorToLineString, osrm::util::LoggingScenario(0)>::Write(old_line);
-        }
-        if (obvious_index == 0)
-        {
-            std::vector<NodeID> new_center = {node_based_graph.GetTarget(via_edge)};
-            util::ScopedGeojsonLoggerGuard<util::NodeIdVectorToMultiPoint, osrm::util::LoggingScenario(1)>::Write(new_center);
-        }
-        else
-        {
-            std::vector<NodeID> new_line = {
-                node_based_graph.GetTarget(via_edge),
-                node_based_graph.GetTarget(intersection[obvious_index].eid)};
-            util::ScopedGeojsonLoggerGuard<util::NodeIdVectorToLineString, osrm::util::LoggingScenario(1)>::Write(new_line);
+            auto line = extractor.GetForwardCoordinatesAlongRoad(
+                node_based_graph.GetTarget(via_edge), intersection[obvious_index].eid);
+            line = extractor.TrimCoordinatesToLength(std::move(line), 30);
+            util::ScopedGeojsonLoggerGuard<util::CoordinateVectorToLineString,
+                                           osrm::util::LoggingScenario(1)>::Write(line);
         }
     }
 
