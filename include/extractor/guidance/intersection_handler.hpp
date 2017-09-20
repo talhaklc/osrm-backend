@@ -477,12 +477,16 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
             return true;
 
         // to continue on a name, we need to have one first
-        if (via_edge_data.name_id == EMPTY_NAMEID)
+        if (via_edge_data.name_id == EMPTY_NAMEID && !via_edge_data.road_classification.IsLowPriorityRoadClass())
             return true;
 
         // and we cannot yloose it (roads loosing their name will be handled after this check here)
         auto const &road_data = node_based_graph.GetEdgeData(road.eid);
-        if (road_data.name_id == EMPTY_NAMEID)
+        if (road_data.name_id == EMPTY_NAMEID && !road_data.road_classification.IsLowPriorityRoadClass())
+            return true;
+
+        // if not both of the entries are empty, we do not consider this a continue
+        if( (via_edge_data.name_id == EMPTY_NAMEID) ^ (road_data.name_id == EMPTY_NAMEID))
             return true;
 
         // the priority can only stay the same or increase. We don't consider a primary->residential
@@ -596,7 +600,7 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
         return to_index_if_valid(straightmost_valid);
     }
 
-    // specia cas handling for motorways, for which nearly narrow / only allowed turns are always
+    // special case handling for motorways, for which nearly narrow / only allowed turns are always
     // obvious
     if (node_based_graph.GetEdgeData(straightmost_valid->eid)
             .road_classification.IsMotorwayClass() &&
