@@ -71,7 +71,7 @@ inline bool addLoopWeight(const DataFacade<ch::Algorithm> &facade,
     return false;
 }
 
-template <bool DIRECTION>
+template <bool DIRECTION, bool STOP_AT_TOP_LEVEL = false>
 void relaxOutgoingEdges(const DataFacade<ch::Algorithm> &facade,
                         const NodeID node,
                         const EdgeWeight weight,
@@ -121,9 +121,9 @@ addLoopWeight(const DataFacade<mld::Algorithm> &, const NodeID, EdgeWeight &, Ed
     return false;
 }
 
-template <typename MultiLevelPartition>
+template <bool STOP_AT_TOP_LEVEL, typename MultiLevelPartition>
 inline LevelID getNodeQueryLevel(const MultiLevelPartition &partition,
-                                 NodeID node,
+                                 const NodeID node,
                                  const PhantomNode &phantom_node)
 {
     auto highest_diffrent_level = [&partition, node](const SegmentID &phantom_node) {
@@ -132,11 +132,16 @@ inline LevelID getNodeQueryLevel(const MultiLevelPartition &partition,
         return INVALID_LEVEL_ID;
     };
 
-    return std::min(highest_diffrent_level(phantom_node.forward_segment_id),
-                    highest_diffrent_level(phantom_node.reverse_segment_id));
+    const auto node_level = std::min(highest_diffrent_level(phantom_node.forward_segment_id),
+                                     highest_diffrent_level(phantom_node.reverse_segment_id));
+
+    if (STOP_AT_TOP_LEVEL && node_level >= partition.GetNumberOfLevels() - 1)
+        return INVALID_LEVEL_ID;
+
+    return node_level;
 }
 
-template <typename MultiLevelPartition>
+template <bool STOP_AT_TOP_LEVEL, typename MultiLevelPartition>
 inline LevelID getNodeQueryLevel(const MultiLevelPartition &partition,
                                  NodeID node,
                                  const std::vector<PhantomNode> &phantom_nodes,
@@ -168,7 +173,7 @@ inline LevelID getNodeQueryLevel(const MultiLevelPartition &partition,
     return result;
 }
 
-template <bool DIRECTION, typename... Args>
+template <bool DIRECTION, bool STOP_AT_TOP_LEVEL = false, typename... Args>
 void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
                         const NodeID node,
                         const EdgeWeight weight,
@@ -179,11 +184,15 @@ void relaxOutgoingEdges(const DataFacade<mld::Algorithm> &facade,
     BOOST_ASSERT(!facade.ExcludeNode(node));
 
     const auto &partition = facade.GetMultiLevelPartition();
+
+    const auto level = getNodeQueryLevel<STOP_AT_TOP_LEVEL>(partition, node, args...);
+
+    // Break outgoing edges relaxation if node at the restricted level
+    if (level == INVALID_LEVEL_ID)
+        return;
+
     const auto &cells = facade.GetCellStorage();
     const auto &metric = facade.GetCellMetric();
-
-    const auto level = getNodeQueryLevel(partition, node, args...);
-
     const auto &node_data = query_heap.GetData(node);
 
     if (level >= 1 && !node_data.from_clique_arc)
@@ -334,7 +343,7 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
         }
     }
 
-    relaxOutgoingEdges<FORWARD_DIRECTION>(
+    relaxOutgoingEdges<FORWARD_DIRECTION, false>(
         facade, node, source_weight, source_duration, query_heap, phantom_node);
 }
 
@@ -352,7 +361,7 @@ void backwardRoutingStep(const DataFacade<Algorithm> &facade,
     // store settled nodes in search space bucket
     search_space_with_buckets.emplace_back(node, column_idx, target_weight, target_duration);
 
-    relaxOutgoingEdges<REVERSE_DIRECTION>(
+    relaxOutgoingEdges<REVERSE_DIRECTION, true>(
         facade, node, target_weight, target_duration, query_heap, phantom_node);
 }
 }
