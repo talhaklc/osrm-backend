@@ -335,7 +335,6 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
     auto relation_types = scripting_environment.GetRelations();
     std::sort(relation_types.begin(), relation_types.end());
 
-    ExtractionRelationContainer relations;
     std::vector<std::string> restrictions = scripting_environment.GetRestrictions();
     // setup restriction parser
     const RestrictionParser restriction_parser(
@@ -353,6 +352,8 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
         std::vector<std::pair<const osmium::Relation &, ExtractionRelation>> resulting_relations;
         std::vector<InputConditionalTurnRestriction> resulting_restrictions;
     };
+
+    ExtractionRelationContainer relations;
 
     const auto buffer_reader = [](osmium::io::Reader &reader) {
         return tbb::filter_t<void, SharedBuffer>(
@@ -423,8 +424,6 @@ Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
                 extractor_callbacks->ProcessRestriction(result);
             }
         });
-
-
 
     tbb::filter_t<SharedBuffer, std::shared_ptr<ExtractionRelationContainer>> buffer_relation_cache(
         tbb::filter::parallel, [&](const SharedBuffer buffer) {
