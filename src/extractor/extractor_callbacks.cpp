@@ -391,8 +391,11 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     if (in_forward_direction)
     { // add (forward) segments or (forward,backward) for non-split edges in backward direction
         const auto annotation_data_id = external_memory.all_edges_annotation_data_list.size();
-        external_memory.all_edges_annotation_data_list.push_back(
-            {name_id, parsed_way.forward_travel_mode, forward_classes, turn_lane_id_forward, parsed_way.is_left_hand_driving});
+        external_memory.all_edges_annotation_data_list.push_back({name_id,
+                                                                  parsed_way.forward_travel_mode,
+                                                                  forward_classes,
+                                                                  turn_lane_id_forward,
+                                                                  parsed_way.is_left_hand_driving});
         util::for_each_pair(
             nodes.cbegin(),
             nodes.cend(),
@@ -421,8 +424,11 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     if (in_backward_direction && (!in_forward_direction || split_edge))
     { // add (backward) segments for split edges or not in forward direction
         const auto annotation_data_id = external_memory.all_edges_annotation_data_list.size();
-        external_memory.all_edges_annotation_data_list.push_back(
-            {name_id, parsed_way.backward_travel_mode, backward_classes, turn_lane_id_backward, parsed_way.is_left_hand_driving});
+        external_memory.all_edges_annotation_data_list.push_back({name_id,
+                                                                  parsed_way.backward_travel_mode,
+                                                                  backward_classes,
+                                                                  turn_lane_id_backward,
+                                                                  parsed_way.is_left_hand_driving});
         util::for_each_pair(
             nodes.cbegin(),
             nodes.cend(),

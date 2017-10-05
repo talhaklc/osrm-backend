@@ -71,8 +71,7 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     : m_edge_based_node_container(node_data_container), m_number_of_edge_based_nodes(0),
       m_coordinates(coordinates), m_node_based_graph(std::move(node_based_graph)),
       m_barrier_nodes(barrier_nodes), m_traffic_lights(traffic_lights),
-      m_compressed_edge_container(compressed_edge_container),
-      name_table(name_table),
+      m_compressed_edge_container(compressed_edge_container), name_table(name_table),
       lane_description_map(lane_description_map)
 {
 }

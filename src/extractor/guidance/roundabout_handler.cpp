@@ -68,7 +68,8 @@ operator()(const NodeID from_nid, const EdgeID via_eid, Intersection intersectio
 }
 
 detail::RoundaboutFlags RoundaboutHandler::getRoundaboutFlags(
-    const NodeID from_nid, const EdgeID via_eid, const Intersection &intersection) const {
+    const NodeID from_nid, const EdgeID via_eid, const Intersection &intersection) const
+{
     const auto &in_edge_data = node_based_graph.GetEdgeData(via_eid);
     const auto &in_edge_class = in_edge_data.flags;
     bool on_roundabout = in_edge_class.roundabout || in_edge_class.circular;

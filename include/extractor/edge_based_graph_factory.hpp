@@ -150,7 +150,7 @@ class EdgeBasedGraphFactory
     std::uint64_t m_number_of_edge_based_nodes;
 
     const std::vector<util::Coordinate> &m_coordinates;
-    const util::NodeBasedDynamicGraph& m_node_based_graph;
+    const util::NodeBasedDynamicGraph &m_node_based_graph;
 
     const std::unordered_set<NodeID> &m_barrier_nodes;
     const std::unordered_set<NodeID> &m_traffic_lights;

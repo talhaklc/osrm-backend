@@ -714,7 +714,7 @@ bool SliproadHandler::isValidSliproadArea(const double max_area,
 }
 
 bool SliproadHandler::isValidSliproadLink(const IntersectionViewData &sliproad,
-                                          const IntersectionViewData &/*first*/,
+                                          const IntersectionViewData & /*first*/,
                                           const IntersectionViewData &second) const
 {
     // If the Sliproad is not a link we don't care

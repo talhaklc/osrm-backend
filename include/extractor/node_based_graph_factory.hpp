@@ -49,8 +49,10 @@ class NodeBasedGraphFactory
     auto &GetAnnotationData() { return annotation_data; }
     auto &GetOsmNodes() { return osm_node_ids; }
 
-    // to reduce the memory footprint, the node-based graph factory allows releasing memory after it might have been used for the last time:
+    // to reduce the memory footprint, the node-based graph factory allows releasing memory after it
+    // might have been used for the last time:
     void ReleaseOsmNodes();
+
   private:
     // Get the information from the *.osrm file (direct product of the extractor callback/extraction
     // containers) and prepare the graph creation process

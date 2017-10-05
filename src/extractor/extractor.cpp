@@ -219,10 +219,11 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 
     util::Log() << "Writing nodes for nodes-based and edges-based graphs ...";
     auto const &coordinates = node_based_graph_factory.GetCoordinates();
-    files::writeNodes(config.GetPath(".osrm.nbg_nodes"), coordinates, node_based_graph_factory.GetOsmNodes());
+    files::writeNodes(
+        config.GetPath(".osrm.nbg_nodes"), coordinates, node_based_graph_factory.GetOsmNodes());
     node_based_graph_factory.ReleaseOsmNodes();
 
-    auto const& node_based_graph = node_based_graph_factory.GetGraph();
+    auto const &node_based_graph = node_based_graph_factory.GetGraph();
 
     // The osrm-partition tool requires the compressed node based graph with an embedding.
     //
