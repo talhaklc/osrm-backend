@@ -420,6 +420,8 @@ function process_way(profile, way, result, relations)
       end
     end
 
+    -- print(result.name, ref)
+
     result.ref = ref
   end
 end
